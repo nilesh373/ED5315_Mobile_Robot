@@ -36,6 +36,7 @@ def get_handles():
   global pioneer_handle
   global pioneer_left_motor_handle
   global pioneer_right_motor_handle
+  global pioneer_sensor_handles
   global goal_handle
 
   # Handle to Pioneer1:
@@ -43,10 +44,21 @@ def get_handles():
   res,  pioneer_left_motor_handle = sim.simxGetObjectHandle(client_ID, "/Pioneer1/Pioneer1_left", sim.simx_opmode_blocking)
   res,  pioneer_right_motor_handle = sim.simxGetObjectHandle(client_ID, "/Pioneer1/Pioneer1_right", sim.simx_opmode_blocking)
 
+  # Handles to Pioneer1's ultrasonic sensor ring:
+  # (nested under Pioneer_p3dx_visible, confirmed against the real scene)
+  pioneer_sensor_handles = []
+  for sensor_name in robot_params.pioneer_sensor_names:
+    res, sensor_handle = sim.simxGetObjectHandle(client_ID, "/Pioneer1/Pioneer_p3dx_visible/" + sensor_name, sim.simx_opmode_blocking)
+    pioneer_sensor_handles.append(sensor_handle)
+
   # Get the position of the Pioneer1 for the first time in streaming mode
   res , pioneer_1_Position = sim.simxGetObjectPosition(client_ID, pioneer_handle, -1 , sim.simx_opmode_streaming)
   res , pioneer_1_Orientation = sim.simxGetObjectOrientation(client_ID, pioneer_handle, -1 , sim.simx_opmode_streaming)
-  
+
+  # Get the readings of the ultrasonic sensors for the first time in streaming mode
+  for sensor_handle in pioneer_sensor_handles:
+    sim.simxReadProximitySensor(client_ID, sensor_handle, sim.simx_opmode_streaming)
+
   # Stop all joint actuations:Make sure Pioneer1 is stationary:
   res = sim.simxSetJointTargetVelocity(client_ID, pioneer_left_motor_handle, 0, sim.simx_opmode_streaming)
   res = sim.simxSetJointTargetVelocity(client_ID, pioneer_right_motor_handle, 0, sim.simx_opmode_streaming)
@@ -144,6 +156,24 @@ def localize_robot():
   print("robot", x,y,theta)
 
   return [x,y,theta]       
+
+def read_proximity_sensors():
+  #Function that returns the current readings of Pioneer1's ultrasonic sensor ring
+  #Order matches robot_params.pioneer_sensor_names (sensor 1 -> index 0, etc.)
+  #Each entry is a distance in metres, or None if that sensor detects nothing
+  global sim
+  global client_ID
+  global pioneer_sensor_handles
+
+  readings = []
+  for sensor_handle in pioneer_sensor_handles:
+    res, detection_state, detected_point, detected_object_handle, detected_normal = sim.simxReadProximitySensor(client_ID, sensor_handle, sim.simx_opmode_buffer)
+    if detection_state:
+      readings.append(float(np.linalg.norm(detected_point)))
+    else:
+      readings.append(None)
+
+  return readings
 
 def change_goal_pose():
   #Function to change goal pose 

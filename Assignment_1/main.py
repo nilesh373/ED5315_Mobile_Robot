@@ -33,8 +33,9 @@ def main():
             robot_state = sim_interface.localize_robot()
             
             while not control.at_goal(robot_state, goal_state):
-                
-                [V,W] = control.gtg(robot_state, goal_state)
+
+                sensor_data = sim_interface.read_proximity_sensors()
+                [V,W] = control.navigate(robot_state, goal_state, sensor_data)
                 sim_interface.setvel_pioneers(V, W)
                 #this time.sleep() gives us dt
                 time.sleep(0.1)
@@ -57,8 +58,9 @@ def main():
             robot_state = sim_interface.localize_robot()
             
             while not control.at_goal(robot_state, goal_state):
-                
-                [V,W] = control.gtg(robot_state, goal_state)
+
+                sensor_data = sim_interface.read_proximity_sensors()
+                [V,W] = control.navigate(robot_state, goal_state, sensor_data)
                 sim_interface.setvel_pioneers(V, W)
                 #this time.sleep() gives us dt
                 time.sleep(0.1)

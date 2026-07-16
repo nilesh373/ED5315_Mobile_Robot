@@ -50,3 +50,16 @@ def gtg(robot_state, goal_state):
     
     #request robot to execute velocity
     return[V,W]
+
+def navigate(robot_state, goal_state, sensor_data):
+    #Combine goal-seeking with reactive obstacle avoidance
+    #sensor_data: list of 16 readings from Pioneer1's ultrasonic ring, ordered
+    #per robot_params.pioneer_sensor_names; each entry is a distance in metres,
+    #or None if that sensor detects nothing.
+    #Design your own strategy here - you may reuse gtg() as a building block.
+
+    V = ??
+    W = ??
+
+    #request robot to execute velocity
+    return[V,W]
