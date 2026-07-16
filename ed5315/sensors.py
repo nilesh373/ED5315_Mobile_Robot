@@ -11,8 +11,7 @@ import numpy as np
 
 
 def read_lidar(sim_interface, num_beams=180):
-    # The Hokuyo's own built-in sweep script was removed from the scene (it
-    # never exposed its scan data externally - see session notes). This
+    # The Hokuyo's own built-in sweep script was removed from the scene. This
     # drives the joint directly instead: set an angle, force a fresh reading
     # with handleProximitySensor, repeat around a full circle.
     sim = sim_interface._sim
