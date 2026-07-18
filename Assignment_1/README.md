@@ -42,6 +42,12 @@ has radius `robot_params.obstacle_radius`.
 
 Do not make any changes to the other code files provided to you.
 
+## Submission
+
+**control.py** is the only file you submit, and the only one that's graded — your
+`control.py` is dropped into a known-good copy of everything else to run the automated
+evaluation. Do not modify `main.py` or any other provided file.
+
 ## Instructions
 
   1. Download the setup provided in this repository (or `git pull` if you already have it).

@@ -24,6 +24,12 @@ Assignment and demo files for **ED5315: Introduction to Field and Service Roboti
 
 To confirm your setup is working before starting an assignment, run the compatibility check in [`Demo`](Demo/README.md).
 
+## Submission
+
+Each assignment has exactly one file you write and submit for automated evaluation -
+everything else in that assignment's folder is provided and must not be modified. See
+each assignment's own README for which file that is and how to test locally.
+
 ## Repository structure
 
 - `Assignment_1` – `Assignment_4`, `Tutorial_1` — individual assignments and tutorial

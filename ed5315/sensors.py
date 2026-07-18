@@ -1,16 +1,19 @@
 """
-Raw sensor access only - no interpretation/detection logic here.
+Raw sensor access only - no obstacle/goal interpretation logic here.
 
 Turning a raw lidar reading or camera image into "obstacle at range r,
-bearing theta" is an assignment task, not shared infrastructure.
+bearing theta" is an assignment task.
 """
 
 import math
 
+import cv2
 import numpy as np
 
+from . import robot_params
 
-def read_lidar(sim_interface, num_beams=180):
+
+def read_lidar(sim_interface, num_beams=robot_params.scan_resolution):
     # The Hokuyo's own built-in sweep script was removed from the scene. This
     # drives the joint directly instead: set an angle, force a fresh reading
     # with handleProximitySensor, repeat around a full circle.
@@ -33,4 +36,12 @@ def read_camera_image(sim_interface):
     arr = arr.reshape(resolution[1], resolution[0], 3)
     # Note: CoppeliaSim vision sensor images are commonly returned bottom-to-top.
     # Verify orientation visually before relying on pixel-row order.
+
+    # Upscale - CoppeliaSim renders fine detail (e.g. ArUco tags) too soft to
+    # reliably decode at the sensor's native resolution.
+    scale = robot_params.vision_upscale
+    new_size = (arr.shape[1] * scale, arr.shape[0] * scale)
+    arr = cv2.resize(arr, new_size, interpolation=cv2.INTER_CUBIC)
+    resolution = (arr.shape[1], arr.shape[0])
+
     return arr, resolution
