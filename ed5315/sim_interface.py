@@ -70,6 +70,13 @@ def get_obstacle_positions():
     return [_sim.getObjectPosition(h, -1)[:2] for h in _h['obstacles']]
 
 
+def get_ground_truth_map():
+    # {tag_id: (x, y)} for every obstacle - the known landmark map handed to
+    # Assignment 4's EKF localization. Tag ids match obstacle index 0-5 (each
+    # obstacle's ArUco tags all encode its own index, see scene contract).
+    return {i: pos for i, pos in enumerate(get_obstacle_positions())}
+
+
 def setvel_pioneers(Vl, Vr):
     # Takes raw left/right wheel angular velocities [rad/s] directly 
     Vl = max(min(Vl, robot_params.max_wheel_W), -robot_params.max_wheel_W)

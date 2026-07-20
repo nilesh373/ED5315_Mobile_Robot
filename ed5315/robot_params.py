@@ -25,3 +25,9 @@ wheel_velocity_noise_std = 0.05  # [rad/s] Std dev of Gaussian noise added to ea
                                   # (simulated encoder noise) - real wheel encoders aren't exact
 
 arena_bounds = (0.4, 25.4, 0.4, 25.6)  # (x_min, x_max, y_min, y_max) [m] of the shared floor
+
+ekf_range_noise_std = 0.1  # [m] Assumed landmark-range measurement noise, for
+                            # Assignment 4's EKF correction step (R matrix) -
+                            # a filter-tuning assumption, not injected noise
+ekf_bearing_noise_std = 0.05  # [rad] Assumed landmark-bearing measurement noise,
+                               # same role as ekf_range_noise_std above

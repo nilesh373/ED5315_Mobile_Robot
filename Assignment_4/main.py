@@ -1,94 +1,104 @@
-# Zig‑Zag Timer‑Based Motion
-import numpy as np
-from math import pi
-import sim_interface
+#!/usr/bin/env python
+
+"""
+Mobile robot simulation setup
+@author: Bijo Sebastian
+"""
+
+#Import files
+from ed5315 import sim_interface, sensors, plotting, robot_params
+import perception
+import control
 import localization
-import covar_mat_sub
-import visualization
-import time
-import signal
-import sys  # for sys.exit
-import matplotlib
-matplotlib.use('Qt5Agg')
-import matplotlib.pyplot as plt
-import update_eq_sub
 
-# Global Parameters
-T_ZIG = 5.0           # seconds per zig or zag
-V_FORWARD = 0.3       # constant forward speed (m/s)
-W_ZIG = 0.8           # constant turn rate for zig (rad/s)
-W_ZAG = -0.5          # constant turn rate for zag (rad/s)
+def main():
+    if (sim_interface.sim_init()):
 
-# Signal handler for clean exit
-def signal_handler(sig, frame):
-    print('Shutting down...')
-    plt.close('all')
-    sim_interface.setvel_pioneers1(0.0, 0.0)
+        #Obtain handles to sim elements
+        sim_interface.get_handles()
+
+        #Start simulation
+        if (sim_interface.start_simulation()):
+
+            #Stop robot
+            sim_interface.setvel_pioneers(0.0, 0.0)
+
+            #Obtain goal position (ground truth - same as Assignment 1/2/3)
+            goal_state = sim_interface.get_goal_pose()
+
+            #The known map handed to the EKF: true (x, y) position of every
+            #obstacle, keyed by its ArUco tag id - this is what makes this
+            #assignment localization against a known map, not SLAM
+            ground_truth_map = sim_interface.get_ground_truth_map()
+
+            #Obtain robot's own STARTING pose only (ground truth) - from here
+            #on robot_state is your own EKF pose estimate, never queried from
+            #simulation again
+            robot_state = sim_interface.localize_robot()
+
+            #Your own obstacle-tracking state - starts empty, a list of
+            #perception.TrackedObstacle
+            tracked_obstacles = []
+
+            #Record both paths for the result plot at the end - true_path is
+            #ground truth, queried purely for comparison/plotting and never
+            #fed into navigation; est_path is what the robot actually steers
+            #by (localization.estimate_pose's output)
+            true_path = [robot_state[:2]]
+            est_path = [robot_state[:2]]
+
+            while not control.at_goal(robot_state, goal_state):
+
+                #Raw sensor reads
+                image, _ = sensors.read_camera_image(sim_interface)
+                lidar_scan = sensors.read_lidar(sim_interface)
+
+                #Detect obstacles from the raw sensor data
+                tracked_obstacles = perception.detect_obstacles(image, lidar_scan, robot_state, tracked_obstacles)
+
+                [V, W] = control.navigation_state_machine(robot_state, goal_state, tracked_obstacles)
+                [Vl, Vr] = control.differential_drive_ik(V, W)
+                sim_interface.setvel_pioneers(Vl, Vr)
+
+                #step the simulation forward one timestep
+                sim_interface.step()
+                true_path.append(sim_interface.localize_robot()[:2])
+
+                #Estimate the robot's new pose via EKF localization - fuses
+                #wheel odometry with corrections from any obstacles detected
+                #above, using their known positions in ground_truth_map
+                Vl_actual, Vr_actual = sensors.read_wheel_velocities(sim_interface)
+                robot_state = localization.estimate_pose(robot_state, Vl_actual, Vr_actual, tracked_obstacles, ground_truth_map)
+                est_path.append(robot_state[:2])
+
+            #Stop robot
+            sim_interface.setvel_pioneers(0.0, 0.0)
+
+            #Plot the map (boundary, ground-truth obstacles, detected
+            #obstacles, goal) and both paths followed
+            fig, ax = plotting.new_plot()
+            plotting.draw_boundary(ax)
+            plotting.draw_obstacles(ax, sim_interface.get_obstacle_positions(), radius=robot_params.obstacle_radius,
+                                     color='red', label='Obstacles (ground truth)')
+            detected_positions = [[o.world_x, o.world_y] for o in tracked_obstacles]
+            plotting.draw_obstacles(ax, detected_positions, color='orange', marker='x',
+                                     label='Obstacles (detected)')
+            plotting.draw_goal(ax, goal_state)
+            plotting.draw_path(ax, true_path, color='blue', label='Ground-truth path')
+            plotting.draw_path(ax, est_path, color='purple', linestyle='--', label='EKF-estimated path')
+            plotting.finish_plot(ax, 'Assignment 4: EKF localization', 'Assignment_4/result.png')
+
+        else:
+            print('Failed to start simulation')
+    else:
+        print('Failed connecting to remote API server')
+
+    sim_interface.setvel_pioneers(0.0, 0.0)
     sim_interface.sim_shutdown()
-    sys.exit(0)
-signal.signal(signal.SIGINT, signal_handler)
+    return
 
-# Main loop
+#run
 if __name__ == '__main__':
-    visualization.plot_initialization()
-    mat_cal = covar_mat_sub.matrix_calculator()
-    update_eq = update_eq_sub.update_eq()
-    odom_cal = localization.Odometry_calculation(mat_cal,update_eq)
 
-    # Initialize simulator
-    if not sim_interface.sim_init():
-        print('Failed to connect to simulator'); sys.exit(1)
-    sim_interface.get_handles()
-    if not sim_interface.start_simulation():
-        print('Failed to start simulation'); sys.exit(1)
-
-    # Timing and state
-    phase_start = time.time()
-    start = phase_start
-    zig_phase = True  # start with zig
-    realpose = sim_interface.localize_robot1()
-    prev_time = time.time()
-
-    try:
-        while True:
-            now = time.time()
-            dt = now - prev_time
-            prev_time = now
-            t = now - start  # Run time since last phase start
-
-            # 1) Check phase duration
-            if now - phase_start >= T_ZIG:
-                zig_phase = not zig_phase
-                phase_start = now
-
-            # 2) Set commands based on phase
-            v_cmd = V_FORWARD
-            w_cmd = W_ZIG if zig_phase else W_ZAG
-
-            # 3) Send to robot
-            sim_interface.setvel_pioneers1(v_cmd, w_cmd)
-
-            # 4) EKF prediction
-            dl, dr = localization.encoder_output(v_cmd, w_cmd, t)
-            tl = dl / localization.ticks_to_millimeter
-            tr = dr / localization.ticks_to_millimeter
-            odom_cal.update_encoder_tick([tl, tr])
-            localization.prediction(odom_cal, realpose)
-
-            # 5) EKF update
-            realpose = sim_interface.localize_robot1()
-            localization.update(odom_cal, realpose)
-
-            # 6) Visualization
-            x, y, theta = odom_cal.pose
-            sim_interface.change_pioneer2_pose(x, y, theta)
-
-            time.sleep(0.01)
-
-    except KeyboardInterrupt:
-        pass
-    finally:
-        sim_interface.setvel_pioneers1(0.0, 0.0)
-        sim_interface.sim_shutdown()
-        plt.show(block=True)
+    main()
     print('Program ended')
