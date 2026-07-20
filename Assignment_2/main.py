@@ -6,7 +6,7 @@ Mobile robot simulation setup
 """
 
 #Import files
-from ed5315 import sim_interface, sensors
+from ed5315 import sim_interface, sensors, plotting, robot_params
 import perception
 import control
 
@@ -32,6 +32,9 @@ def main():
             #perception.TrackedObstacle
             tracked_obstacles = []
 
+            #Record the path followed, for the result plot at the end
+            path = [robot_state[:2]]
+
             while not control.at_goal(robot_state, goal_state):
 
                 #Raw sensor reads - no obstacle ground truth this assignment
@@ -48,9 +51,23 @@ def main():
                 #step the simulation forward one timestep
                 sim_interface.step()
                 robot_state = sim_interface.localize_robot()
+                path.append(robot_state[:2])
 
             #Stop robot
             sim_interface.setvel_pioneers(0.0, 0.0)
+
+            #Plot the map (boundary, ground-truth obstacles, detected
+            #obstacles, goal) and the path followed
+            fig, ax = plotting.new_plot()
+            plotting.draw_boundary(ax)
+            plotting.draw_obstacles(ax, sim_interface.get_obstacle_positions(), radius=robot_params.obstacle_radius,
+                                     color='red', label='Obstacles (ground truth)')
+            detected_positions = [[o.world_x, o.world_y] for o in tracked_obstacles]
+            plotting.draw_obstacles(ax, detected_positions, color='orange', marker='x',
+                                     label='Obstacles (detected)')
+            plotting.draw_goal(ax, goal_state)
+            plotting.draw_path(ax, path, label='Robot path')
+            plotting.finish_plot(ax, 'Assignment 2: sense obstacles via camera + lidar', 'Assignment_2/result.png')
 
         else:
             print('Failed to start simulation')

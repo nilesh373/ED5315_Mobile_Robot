@@ -19,7 +19,7 @@ def gtg(robot_state, goal_state):
 def avoid_obstacles(robot_state, nearby_obstacles):
     #Reactive obstacle avoidance controller.
     #nearby_obstacles: list of [x, y] world positions of obstacles currently
-    #within OBSTACLE_SENSE_RADIUS of the robot (see main.py) - not a memory,
+    #within robot_params.obstacle_sense_radius of the robot (see main.py) - not a memory,
     #may be empty, and an obstacle drops back out once the robot moves away
     #from it. Every obstacle has radius robot_params.obstacle_radius.
     #Design your own strategy here - e.g. steer away from the nearest one.

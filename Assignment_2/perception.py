@@ -33,7 +33,7 @@ def detect_obstacles(image, lidar_scan, robot_state, tracked_obstacles):
     #
     #Returns the updated tracked_obstacles (list of TrackedObstacle), passed
     #back into the next call *and* used directly by control.py for
-    #navigation.I f you want
-    #navigation to ignore obstacles that haven't been seen in a while, decide
-    #that yourself (e.g. in control.py, using an entry's detected_time).
+    #navigation. If you want navigation to ignore obstacles that haven't been
+    #seen in a while, decide that yourself (e.g. in control.py, using an
+    #entry's detected_time).
     raise NotImplementedError

@@ -1,30 +1,76 @@
 # ED5315 Assignment-3
-Odometry with Covariance for a mobile robot (Visualized in Coppleiasim(V-REP))
+Wheel odometry for a differential-drive mobile robot (Pioneer p3dx) in CoppeliaSim - the
+robot no longer knows its own pose from simulation and must estimate it by dead-reckoning
+from its wheel velocities instead.
 
-## Setup:
-OS: Windows 10/11; Ubuntu 20.04
+## Setup
+See the [repository root README](../README.md) for installation and setup.
 
+## What's different from Assignment 1/2
 
-Python: 3.6.x
-Coppeliasim: V4.3.0
+The goal is still ground truth (`sim_interface.get_goal_pose()`, exactly like Assignment
+1/2), and obstacles are still detected via `perception.py` exactly like Assignment 2. The
+one thing that's changed is the robot's own pose: `main.py` calls
+`sim_interface.localize_robot()` **once**, at the very start, to seed the robot's initial
+pose - after that, `robot_state` is never queried from the simulator again. Every loop
+iteration, it's instead updated by your own **estimate_pose** in **odometry.py**, from the
+robot's wheel velocities:
+- `Vl`, `Vr`: left/right wheel angular velocities [rad/s], from
+  `ed5315.sensors.read_wheel_velocities`. These are **not** the commanded velocity - they
+  carry simulated encoder noise (`robot_params.wheel_velocity_noise_std`), so your pose
+  estimate will drift from the truth over time. That's the point of the assignment, not a
+  bug to eliminate.
 
-To check the compatibility of your system, follow the instructions [here](https://github.com/BijoSebastian/ED5315_Mobile_Robot_Sim_Setup/tree/main/Demo) and run the demo script.
+Everything downstream (`perception.py`'s world-coordinate conversion, `control.py`'s
+`gtg`/`avoid_obstacles`) already just takes `robot_state` as a plain `[x, y, theta]` - it
+doesn't know or care whether it's ground truth or your own estimate, so nothing there
+needs to change.
 
-## Instructions:
+## Task: Odometry
 
-  1. Download the setup provided in this repository. If you are familiar with how to use git on windows do that, if not click on the green button that says code and click on download zip. Once the download is complete, double click to extract the contents and place them in a location of your choice, the downloads folder itself works fine.
+Complete **estimate_pose** in **odometry.py** - this is the file you submit (see
+Submission below). Convert `Vl`/`Vr` to linear wheel speeds via `robot_params.wheel_radius`,
+combine them into the robot's linear/angular velocity via `robot_params.track_width`, then
+integrate `robot_state`'s `x`/`y`/`theta` forward by the elapsed time `dt` since your last
+call. Source `dt` yourself via `ed5315.sim_interface.sim_time()` (same pattern as
+Assignment 1/2's `gtg`) - it is not passed in as a parameter.
 
-  2. Complete the **f_p** and **f_u** functions in the file **covar_mat_sub.py**. You need to define the Jacobian matrix for Error propogation calculations.  Do not make any changes to the other code files provided to you.
+## control.py / perception.py
 
-  3. Once you have completed defining the matrices (**F_p and F_u**), launch Coppeliasim. Click on File->Open Scene. Navigate to the downloaded setup and select the file “mobile robot_odom.ttt”. Run the simulation by clicking on the light blue play button.
+Both carried over unchanged from Assignment 1/2 - same function names, signatures, and
+`dt`-handling. Neither is graded here; see Submission below.
 
-  4. Launch Spyder. Click on File -> Open and navigate to the downloaded setup. Select the file main.py, run it by clicking on the green play button.(Always ensure you are in the same repository!) 
+Do not make any changes to `main.py`.
 
-  5. Always ensure that the simulation is running before you launch the code, otherwise you will get an error that says **"Failed connecting to the remote API server. Program ended"**.
+## Submission
 
-  6.	If you had defined the matrix correctly, you will see a robot moving along with a phantom robot. The real robot is the ground truth and the phantom robot 's position is based on the odometry calculations.
+**odometry.py** is the only file you submit, and the only one that's graded -
+`control.py`/`perception.py` in this folder are *not* evaluated, they're only here so you
+can run and test `main.py` locally end-to-end. Paste your own working **control.py** from
+Assignment 1/2 and **perception.py** from Assignment 2 into this folder - both drop in
+completely unchanged. Do not modify `main.py`.
 
-## Solution video:
-Your output would look like this.
+## Instructions
 
-![Solution run 1](solution/Solution1.gif)
+  1. Download the setup provided in this repository (or `git pull` if you already have it).
+
+  2. Copy your working **control.py** and **perception.py** from Assignment 1/2 over this
+     folder's copies.
+
+  3. Complete **estimate_pose** in **odometry.py** - this is the file you'll submit. Do
+     not make any changes to the other code files provided to you.
+
+  4. Launch CoppeliaSim. Click File -> Open Scene, and open the shared
+     [`scenes/mobile_robot.ttt`](../scenes/mobile_robot.ttt) (this scene is shared across
+     all assignments, not copied per-assignment). Run the simulation with the play button.
+
+  5. Run `main.py` from this folder (or `python Assignment_3/main.py` from the repository
+     root).
+
+  6. Always ensure the simulation is running before you launch the code, otherwise you'll
+     get "Failed connecting to remote API server."
+
+  7. If your implementation is correct, the robot will still find its way to the goal
+     while avoiding obstacles, but - because it's navigating off its own odometry estimate
+     instead of ground truth - it may not stop exactly on the true goal position; some
+     drift between where it thinks it is and where it actually is is expected.

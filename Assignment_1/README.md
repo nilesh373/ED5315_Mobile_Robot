@@ -26,7 +26,7 @@ Complete **avoid_obstacles** and **navigation_state_machine** in **control.py**.
 always knows its own pose (from simulation) and the goal pose, but obstacle positions are
 only reported within a limited sensing radius: each control-loop iteration, `main.py`
 reports the ground-truth `(x, y)` position of every obstacle *currently* within
-`OBSTACLE_SENSE_RADIUS` (2 m) of the robot, as `nearby_obstacles`. This is **not** a
+`robot_params.obstacle_sense_radius` (2 m) of the robot, as `nearby_obstacles`. This is **not** a
 memory — it's recomputed fresh every iteration, so an obstacle drops back out again as
 soon as the robot moves away from it, and `nearby_obstacles` may be empty. Every obstacle
 has radius `robot_params.obstacle_radius`.

@@ -8,21 +8,19 @@ Mobile robot simulation setup
 import math
 
 #Import files
-from ed5315 import sim_interface
+from ed5315 import sim_interface, plotting, robot_params
 import control
-
-OBSTACLE_SENSE_RADIUS = 2.0  # [m] distance within which an obstacle's position is currently known
 
 def get_nearby_obstacles(robot_state, obstacle_positions):
     #Simulates a bounded-range sensing radius: only obstacles currently within
-    #OBSTACLE_SENSE_RADIUS of the robot are reported. This is not a memory -
+    #robot_params.obstacle_sense_radius of the robot are reported. This is not a memory -
     #an obstacle drops back out again as soon as the robot moves away from it.
     #This is provided harness behaviour, not part of the control task in
     #control.py.
     nearby = []
     for obs in obstacle_positions:
         d = math.hypot(obs[0] - robot_state[0], obs[1] - robot_state[1])
-        if d <= OBSTACLE_SENSE_RADIUS:
+        if d <= robot_params.obstacle_sense_radius:
             nearby.append(obs)
     return nearby
 
@@ -44,6 +42,9 @@ def main():
             #Obtain robots position
             robot_state = sim_interface.localize_robot()
 
+            #Record the path followed, for the result plot at the end
+            path = [robot_state[:2]]
+
             while not control.at_goal(robot_state, goal_state):
 
                 obstacle_positions = sim_interface.get_obstacle_positions()
@@ -56,9 +57,18 @@ def main():
                 #step the simulation forward one timestep
                 sim_interface.step()
                 robot_state = sim_interface.localize_robot()
+                path.append(robot_state[:2])
 
             #Stop robot
             sim_interface.setvel_pioneers(0.0, 0.0)
+
+            #Plot the map (boundary, obstacles, goal) and the path followed
+            fig, ax = plotting.new_plot()
+            plotting.draw_boundary(ax)
+            plotting.draw_obstacles(ax, sim_interface.get_obstacle_positions(), radius=robot_params.obstacle_radius)
+            plotting.draw_goal(ax, goal_state)
+            plotting.draw_path(ax, path, label='Robot path')
+            plotting.finish_plot(ax, 'Assignment 1: known-map navigation', 'Assignment_1/result.png')
 
         else:
             print('Failed to start simulation')
