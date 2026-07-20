@@ -13,10 +13,7 @@ import control
 
 def get_nearby_obstacles(robot_state, obstacle_positions):
     #Simulates a bounded-range sensing radius: only obstacles currently within
-    #robot_params.obstacle_sense_radius of the robot are reported. This is not a memory -
-    #an obstacle drops back out again as soon as the robot moves away from it.
-    #This is provided harness behaviour, not part of the control task in
-    #control.py.
+    #robot_params.obstacle_sense_radius of the robot are reported.
     nearby = []
     for obs in obstacle_positions:
         d = math.hypot(obs[0] - robot_state[0], obs[1] - robot_state[1])

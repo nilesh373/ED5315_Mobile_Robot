@@ -1,9 +1,6 @@
 #This file is NOT what you submit for Assignment 3 - only odometry.py is graded.
 #Paste your own working control.py solution from Assignment 1/2 in here to test
-#odometry.py locally end-to-end - it's unchanged from Assignment 2: robot_state
-#is just an [x, y, theta] triple to this file either way, it doesn't know or
-#care whether it's ground truth (Assignment 1/2) or your own odometry estimate
-#(this assignment). See README.md's Submission section.
+#odometry.py locally end-to-end - it's unchanged from Assignment 2. See README.md's Submission section.
 from ed5315 import sim_interface, robot_params
 
 prev_heading_error = 0.0
@@ -24,7 +21,7 @@ def gtg(robot_state, goal_state):
 
 def avoid_obstacles(robot_state, tracked_obstacles):
     #Reactive obstacle avoidance controller.
-    #tracked_obstacles: the full list of perception.TrackedObstacle - may be
+    #tracked_obstacles: the full list of ed5315.sensors.TrackedObstacle - may be
     #empty, and it's not filtered to "currently visible" for you: every
     #obstacle ever detected stays in it, each with .id, .world_x, .world_y,
     #.velocity_x, .velocity_y, .detected_time. Decide yourself which ones are

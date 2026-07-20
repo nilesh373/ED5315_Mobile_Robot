@@ -25,7 +25,7 @@ def gtg(robot_state, goal_state):
 
 def avoid_obstacles(robot_state, tracked_obstacles):
     #Reactive obstacle avoidance controller.
-    #tracked_obstacles: the full list of perception.TrackedObstacle - may be
+    #tracked_obstacles: the full list of ed5315.sensors.TrackedObstacle - may be
     #empty, and it's not filtered to "currently visible" for you: every
     #obstacle ever detected stays in it, each with .id, .world_x, .world_y,
     #.velocity_x, .velocity_y, .detected_time. Decide yourself which ones are

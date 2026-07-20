@@ -1,18 +1,8 @@
 #This file is NOT what you submit for Assignment 4 - only localization.py is graded.
 #Paste your own working perception.py solution from Assignment 2/3 in here to test
 #localization.py locally end-to-end. See README.md's Submission section.
-from dataclasses import dataclass
-
 from ed5315 import sim_interface, robot_params
-
-@dataclass
-class TrackedObstacle:
-    id: int
-    world_x: float
-    world_y: float
-    velocity_x: float
-    velocity_y: float
-    detected_time: float
+from ed5315.sensors import TrackedObstacle
 
 def detect_obstacles(image, lidar_scan, robot_state, tracked_obstacles):
     #Detect every currently-visible obstacle from the camera image and lidar
@@ -28,7 +18,8 @@ def detect_obstacles(image, lidar_scan, robot_state, tracked_obstacles):
     #    coordinates. Since robot_state can drift from the truth, a detected
     #    obstacle's world position inherits that same drift - that's
     #    expected, and exactly what localization.py's EKF corrects for.
-    #tracked_obstacles: a list of TrackedObstacle (defined above) - whatever
+    #tracked_obstacles: a list of TrackedObstacle (imported above, from
+    #    ed5315.sensors - not defined here) - whatever
     #    you returned from the previous call, starting as an empty list on
     #    the first call. When an id is seen again, update its existing
     #    entry's world_x/world_y/velocity_x/velocity_y/detected_time (use

@@ -3,7 +3,7 @@
 #perception.py locally end-to-end - at_goal/gtg/differential_drive_ik drop in
 #unchanged (goal_state has the same shape as Assignment 1), but avoid_obstacles
 #and navigation_state_machine need adapting to tracked_obstacles (a list of
-#perception.TrackedObstacle, not [x, y] pairs). See README.md's Submission section.
+#ed5315.sensors.TrackedObstacle, not [x, y] pairs). See README.md's Submission section.
 from ed5315 import sim_interface, robot_params
 
 prev_heading_error = 0.0
@@ -24,7 +24,7 @@ def gtg(robot_state, goal_state):
 
 def avoid_obstacles(robot_state, tracked_obstacles):
     #Reactive obstacle avoidance controller.
-    #tracked_obstacles: the full list of perception.TrackedObstacle - may be
+    #tracked_obstacles: the full list of ed5315.sensors.TrackedObstacle - may be
     #empty, and it's not filtered to "currently visible" for you: every
     #obstacle ever detected stays in it, each with .id, .world_x, .world_y,
     #.velocity_x, .velocity_y, .detected_time. Decide yourself which ones are

@@ -37,7 +37,7 @@ def main():
             robot_state = sim_interface.localize_robot()
 
             #Your own obstacle-tracking state - starts empty, a list of
-            #perception.TrackedObstacle
+            #ed5315.sensors.TrackedObstacle
             tracked_obstacles = []
 
             #Record both paths for the result plot at the end - true_path is

@@ -40,25 +40,19 @@ has radius `robot_params.obstacle_radius`.
   `nearby_obstacles` is empty, or how close the nearest one currently is) rather than
   blend them — design your own switching logic.
 
-Do not make any changes to the other code files provided to you.
-
 ## Submission
 
-**control.py** is the only file you submit, and the only one that's graded — your
-`control.py` is dropped into a known-good copy of everything else to run the automated
-evaluation. Do not modify `main.py` or any other provided file.
+**control.py** is the only file you submit, and the only one that's graded. Do not modify `main.py` or any other provided file.
 
 ## Instructions
 
   1. Download the setup provided in this repository (or `git pull` if you already have it).
 
   2. Complete **at_goal**, **gtg**, **differential_drive_ik**, **avoid_obstacles**, and
-     **navigation_state_machine** in **control.py**. Do not make any changes to the other
-     code files provided to you.
+     **navigation_state_machine** in **control.py**.
 
   3. Launch CoppeliaSim. Click File -> Open Scene, and open the shared
-     [`scenes/mobile_robot.ttt`](../scenes/mobile_robot.ttt) (this scene is shared across
-     all assignments, not copied per-assignment). Run the simulation with the play button.
+     [`scenes/mobile_robot.ttt`](../scenes/mobile_robot.ttt). Run the simulation with the play button.
 
   4. Run `main.py` from this folder (or `python Assignment_1/main.py` from the repository
      root).

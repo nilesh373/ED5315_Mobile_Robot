@@ -13,24 +13,24 @@ truth, exactly like Assignment 1. The only thing that's changed is obstacles: in
 being handed their positions directly, you must detect them yourself each control-loop
 iteration, from:
 - `image`: an RGB array from the onboard camera (`ed5315.sensors.read_camera_image`) -
-  already upscaled for reliable ArUco decoding, no need to resize it yourself.
+  already upscaled for reliable ArUco decoding.
   `robot_params.vision_fov` / `robot_params.vision_resolution` describe its field of view
   and native resolution.
 - `lidar_scan`: a full-circle range scan (`ed5315.sensors.read_lidar`).
 
-Some obstacle in the scene moves; some are stationary. Since only your own detections
-tell you where things are, use `robot_state` (still ground truth) to convert a detection
+Some obstacle in the scene moves; some are stationary. Use `robot_state` (still ground truth) to convert a detection
 from the robot's own frame into world coordinates, so a moving obstacle's own motion
 isn't confounded with the robot's ego-motion.
 
 ## Task: Obstacle detection and tracking
 
 Complete **detect_obstacles** in **perception.py** - this is the file you submit. Each obstacle carries a unique ArUco tag (`robot_params.aruco_tag_size`
-gives its physical size) - use it both to find the obstacle and to read off its id.
+gives its physical size) - use it to find the obstacle and to read its id.
 
 `tracked_obstacles` is a list of the
-`TrackedObstacle` dataclass already defined at the top of `perception.py`, with fields
-`id`, `world_x`, `world_y`, `velocity_x`, `velocity_y`, `detected_time`. `main.py` passes
+`TrackedObstacle` dataclass (`ed5315.sensors.TrackedObstacle`, already imported at the top
+of `perception.py` - not defined there, so your submission can't change its shape), with
+fields `id`, `world_x`, `world_y`, `velocity_x`, `velocity_y`, `detected_time`. `main.py` passes
 back exactly what you returned last call (starting from an empty list on the first call).
 When an id is seen again, update its existing entry (use `ed5315.sim_interface.sim_time()`
 and the entry's previous `detected_time` to work out `velocity_x`/`velocity_y`); the first
@@ -46,7 +46,7 @@ Mostly identical to Assignment 1's `control.py`: `at_goal`, `gtg`, and
 `differential_drive_ik` are unchanged (`goal_state` is ground truth, same as Assignment 1,
 `dt` sourced internally via `ed5315.sim_interface.sim_time()`, never passed in).
 `avoid_obstacles` and `navigation_state_machine` differ, since they now take the full
-`tracked_obstacles` list (`perception.TrackedObstacle` instances - use `.world_x`/
+`tracked_obstacles` list (`ed5315.sensors.TrackedObstacle` instances - use `.world_x`/
 `.world_y`/`.velocity_x`/`.velocity_y`, not `[x, y]` indexing).
 Do not make any changes to `main.py`.
 
@@ -66,11 +66,9 @@ it: `at_goal`/`gtg`/`differential_drive_ik` drop in unchanged, but you'll need t
   2. Copy your working **control.py** from Assignment 1 over this folder's **control.py**.
 
   3. Complete **detect_obstacles** in **perception.py** - this is the file you'll submit.
-     Do not make any changes to the other code files provided to you.
 
   4. Launch CoppeliaSim. Click File -> Open Scene, and open the shared
-     [`scenes/mobile_robot.ttt`](../scenes/mobile_robot.ttt) (this scene is shared across
-     all assignments, not copied per-assignment). Run the simulation with the play button.
+     [`scenes/mobile_robot.ttt`](../scenes/mobile_robot.ttt). Run the simulation with the play button.
 
   5. Run `main.py` from this folder (or `python Assignment_2/main.py` from the repository
      root).

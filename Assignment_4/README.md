@@ -48,9 +48,8 @@ All three carried over unchanged from Assignment 1/2/3 - same function names, si
 and `dt`-handling. None of them are graded here; see Submission below. Note that
 `odometry.py` is more than just a local-testing convenience this time: your
 `localization.py` is expected to call its `estimate_pose` directly as the EKF's prediction
-step, so a working `odometry.py` is required for `localization.py` to run at all.
-
-Do not make any changes to `main.py`.
+step, so a working `odometry.py` is required for `localization.py` to run at all. Do not
+make any changes to `main.py`.
 
 ## Submission
 
@@ -59,7 +58,6 @@ Do not make any changes to `main.py`.
 here so you can run and test `main.py` locally end-to-end. Paste your own working
 **control.py** from Assignment 1/2/3, **perception.py** from Assignment 2/3, and
 **odometry.py** from Assignment 3 into this folder - all three drop in completely unchanged.
-Do not modify `main.py`.
 
 ## Instructions
 
@@ -68,12 +66,10 @@ Do not modify `main.py`.
   2. Copy your working **control.py**, **perception.py**, and **odometry.py** from
      Assignment 1/2/3 over this folder's copies.
 
-  3. Complete **estimate_pose** in **localization.py** - this is the file you'll submit. Do
-     not make any changes to the other code files provided to you.
+  3. Complete **estimate_pose** in **localization.py** - this is the file you'll submit.
 
   4. Launch CoppeliaSim. Click File -> Open Scene, and open the shared
-     [`scenes/mobile_robot.ttt`](../scenes/mobile_robot.ttt) (this scene is shared across
-     all assignments, not copied per-assignment). Run the simulation with the play button.
+     [`scenes/mobile_robot.ttt`](../scenes/mobile_robot.ttt). Run the simulation with the play button.
 
   5. Run `main.py` from this folder (or `python Assignment_4/main.py` from the repository
      root).

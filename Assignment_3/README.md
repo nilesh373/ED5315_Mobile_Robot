@@ -18,13 +18,10 @@ robot's wheel velocities:
 - `Vl`, `Vr`: left/right wheel angular velocities [rad/s], from
   `ed5315.sensors.read_wheel_velocities`. These are **not** the commanded velocity - they
   carry simulated encoder noise (`robot_params.wheel_velocity_noise_std`), so your pose
-  estimate will drift from the truth over time. That's the point of the assignment, not a
-  bug to eliminate.
+  estimate will drift from the truth over time.
 
 Everything downstream (`perception.py`'s world-coordinate conversion, `control.py`'s
-`gtg`/`avoid_obstacles`) already just takes `robot_state` as a plain `[x, y, theta]` - it
-doesn't know or care whether it's ground truth or your own estimate, so nothing there
-needs to change.
+`gtg`/`avoid_obstacles`) just takes `robot_state` as a plain `[x, y, theta]`.
 
 ## Task: Odometry
 
@@ -38,17 +35,15 @@ Assignment 1/2's `gtg`) - it is not passed in as a parameter.
 ## control.py / perception.py
 
 Both carried over unchanged from Assignment 1/2 - same function names, signatures, and
-`dt`-handling. Neither is graded here; see Submission below.
-
-Do not make any changes to `main.py`.
+`dt`-handling. Neither is graded here; see Submission below. Do not make any changes to
+`main.py`.
 
 ## Submission
 
 **odometry.py** is the only file you submit, and the only one that's graded -
 `control.py`/`perception.py` in this folder are *not* evaluated, they're only here so you
 can run and test `main.py` locally end-to-end. Paste your own working **control.py** from
-Assignment 1/2 and **perception.py** from Assignment 2 into this folder - both drop in
-completely unchanged. Do not modify `main.py`.
+Assignment 1/2 and **perception.py** from Assignment 2 into this folder.
 
 ## Instructions
 
@@ -57,12 +52,10 @@ completely unchanged. Do not modify `main.py`.
   2. Copy your working **control.py** and **perception.py** from Assignment 1/2 over this
      folder's copies.
 
-  3. Complete **estimate_pose** in **odometry.py** - this is the file you'll submit. Do
-     not make any changes to the other code files provided to you.
+  3. Complete **estimate_pose** in **odometry.py** - this is the file you'll submit.
 
   4. Launch CoppeliaSim. Click File -> Open Scene, and open the shared
-     [`scenes/mobile_robot.ttt`](../scenes/mobile_robot.ttt) (this scene is shared across
-     all assignments, not copied per-assignment). Run the simulation with the play button.
+     [`scenes/mobile_robot.ttt`](../scenes/mobile_robot.ttt). Run the simulation with the play button.
 
   5. Run `main.py` from this folder (or `python Assignment_3/main.py` from the repository
      root).
@@ -72,5 +65,4 @@ completely unchanged. Do not modify `main.py`.
 
   7. If your implementation is correct, the robot will still find its way to the goal
      while avoiding obstacles, but - because it's navigating off its own odometry estimate
-     instead of ground truth - it may not stop exactly on the true goal position; some
-     drift between where it thinks it is and where it actually is is expected.
+     instead of ground truth - it may not stop exactly on the true goal position.

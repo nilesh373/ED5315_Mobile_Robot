@@ -6,11 +6,27 @@ bearing theta" is an assignment task.
 """
 
 import math
+from dataclasses import dataclass
 
 import cv2
 import numpy as np
 
 from . import robot_params
+
+
+@dataclass
+class TrackedObstacle:
+    # Per-obstacle tracking state, shared across Assignment 2-4's
+    # perception.py/control.py/localization.py. Lives here, not in any
+    # student-submitted file, so a submission can't change its shape and
+    # break the other files/main.py that depend on it (see decision #5 /
+    # SCENE_CONTRACT.md §4 - an auto-graded file needs a predictable shape).
+    id: int
+    world_x: float
+    world_y: float
+    velocity_x: float
+    velocity_y: float
+    detected_time: float
 
 
 def read_lidar(sim_interface, num_beams=robot_params.scan_resolution):

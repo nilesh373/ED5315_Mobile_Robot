@@ -31,7 +31,7 @@ def estimate_pose(robot_state, Vl, Vr, tracked_obstacles, ground_truth_map):
     #    to propagate your covariance through that same motion model's
     #    Jacobians (state Jacobian wrt [x, y, theta], control Jacobian wrt
     #    [Vl, Vr]) plus process noise from robot_params.wheel_velocity_noise_std.
-    #tracked_obstacles: list of perception.TrackedObstacle (same shape as
+    #tracked_obstacles: list of ed5315.sensors.TrackedObstacle (same shape as
     #    Assignment 2/3) - filter to whichever entries were actually detected
     #    THIS call to use as EKF correction measurements this step; a stale
     #    entry from an earlier call shouldn't correct against a pose you've
