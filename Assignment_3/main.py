@@ -1,40 +1,17 @@
-import numpy as np #importing thr numericla python library
-from math import sin, cos, pi #importing the necessary library 
-import sim_interface
-import localization
-import covar_mat_sub
-import visualization
-import time
-import signal
-import sys  # Import the sys module for sys.exit()
-import matplotlib
-matplotlib.use('Qt5Agg')  # or 'Agg' for non-interactive use
-import matplotlib.pyplot as plt
-#Global Variables
+#!/usr/bin/env python
 
-def signal_handler(sig,frame):
-    print('Shutting down...')
-    plt.close('all')
-    sys.exit(0)
+"""
+Mobile robot simulation setup
+@author: Bijo Sebastian
+"""
 
-signal.signal(signal.SIGINT,signal_handler)
+#Import files
+from ed5315 import sim_interface, sensors, plotting, robot_params
+import perception
+import control
+import odometry
 
 def main():
-
-    global odom_cal
-
-    visualization.plot_initialization()
-
-    #Class object for odometry calculation
-    mat_cal=covar_mat_sub.matrix_calculator()
-    odom_cal = localization.Odometry_calculation(mat_cal)
-
-    k=0
-    r=0
-    v,w=1,1
-
-
-    
     if (sim_interface.sim_init()):
 
         #Obtain handles to sim elements
@@ -42,57 +19,80 @@ def main():
 
         #Start simulation
         if (sim_interface.start_simulation()):
-            
+
             #Stop robot
-            sim_interface.setvel_pioneers1(v,w)
-            #sim_interface.setvel_pioneers2(v,w)
-            start=time.time()
+            sim_interface.setvel_pioneers(0.0, 0.0)
 
-            #time.sleep(9)
+            #Obtain goal position (ground truth - same as Assignment 1/2)
+            goal_state = sim_interface.get_goal_pose()
 
-            #Obtain robots position
-            realpose = sim_interface.localize_robot1()
-            #robot_state2 = sim_interface.localize_robot2()
+            #Obtain robot's own STARTING pose only (ground truth) - from here
+            #on robot_state is your own odometry estimate, never queried from
+            #simulation again
+            robot_state = sim_interface.localize_robot()
 
-            try:
-                while(True):
-                    # Update encoder ticks (simulating the process)
-                    # You can replace the values with your own logic or input
-                    now=time.time()
-                    delt=now-start
-                    dl,dr=localization.encoder_output(v,w,delt)
-                    tl,tr=(dl/localization.ticks_to_millimeter),(dr/localization.ticks_to_millimeter)
-                    odom_cal.update_encoder_tick([tl,tr])
+            #Your own obstacle-tracking state - starts empty, a list of
+            #ed5315.sensors.TrackedObstacle
+            tracked_obstacles = []
 
-                    realpose = sim_interface.localize_robot1()
-                    
-                    # Update the plot with the new data
-                    localization.update_plot(odom_cal,realpose)
-                    x,y,theta=odom_cal.pose
-                    sim_interface.change_pioneer2_pose(x,y,theta)
-                    # Sleep for a short duration to simulate real-time updates
-                    time.sleep(0.1)  # Adjust this to control the update frequency
-                    k-=10
+            #Record both paths for the result plot at the end - true_path is
+            #ground truth, queried purely for comparison/plotting and never
+            #fed into navigation; est_path is what the robot actually
+            #steers by (odometry.estimate_pose's output)
+            true_path = [robot_state[:2]]
+            est_path = [robot_state[:2]]
 
-            except KeyboardInterrupt:
-                pass
+            while not control.at_goal(robot_state, goal_state):
 
-            # Show the plot at the end (block=True to keep it open)
-            plt.show(block=True)
-            
-            
-            
+                #Raw sensor reads
+                image, _ = sensors.read_camera_image(sim_interface)
+                lidar_scan = sensors.read_lidar(sim_interface)
+
+                #Detect obstacles from the raw sensor data
+                tracked_obstacles = perception.detect_obstacles(image, lidar_scan, robot_state, tracked_obstacles)
+
+                [V, W] = control.navigation_state_machine(robot_state, goal_state, tracked_obstacles)
+                [Vl, Vr] = control.differential_drive_ik(V, W)
+                sim_interface.setvel_pioneers(Vl, Vr)
+
+                #step the simulation forward one timestep
+                sim_interface.step()
+                true_path.append(sim_interface.localize_robot()[:2])
+
+                #Estimate the robot's new pose from wheel odometry - this
+                #replaces sim_interface.localize_robot() from here on
+                Vl_actual, Vr_actual = sensors.read_wheel_velocities(sim_interface)
+                robot_state = odometry.estimate_pose(robot_state, Vl_actual, Vr_actual)
+                est_path.append(robot_state[:2])
+
+            #Stop robot
+            sim_interface.setvel_pioneers(0.0, 0.0)
+
+            #Plot the map (boundary, ground-truth obstacles, detected
+            #obstacles, goal) and both paths followed
+            fig, ax = plotting.new_plot()
+            plotting.draw_boundary(ax)
+            plotting.draw_obstacles(ax, sim_interface.get_obstacle_positions(), radius=robot_params.obstacle_radius,
+                                     color='red', label='Obstacles (ground truth)')
+            detected_positions = [[o.world_x, o.world_y] for o in tracked_obstacles]
+            plotting.draw_obstacles(ax, detected_positions, color='orange', marker='x',
+                                     label='Obstacles (detected)')
+            plotting.draw_goal(ax, goal_state)
+            plotting.draw_path(ax, true_path, color='blue', label='Ground-truth path')
+            plotting.draw_path(ax, est_path, color='purple', linestyle='--', label='Odometry-estimated path')
+            plotting.finish_plot(ax, 'Assignment 3: wheel odometry', 'Assignment_3/result.png')
+
         else:
-            print ('Failed to start simulation')
+            print('Failed to start simulation')
     else:
-        print ('Failed connecting to remote API server')
-    
+        print('Failed connecting to remote API server')
+
+    sim_interface.setvel_pioneers(0.0, 0.0)
     sim_interface.sim_shutdown()
-    time.sleep(2.0)
     return
 
 #run
 if __name__ == '__main__':
 
-    main()                    
-    print ('Program ended')
+    main()
+    print('Program ended')

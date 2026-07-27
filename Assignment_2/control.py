@@ -1,52 +1,52 @@
-import robot_params
-import numpy as np 
-import time
+#This file is NOT what you submit for Assignment 2 - only perception.py is graded.
+#Paste your own working control.py solution from Assignment 1 in here to test
+#perception.py locally end-to-end - at_goal/gtg/differential_drive_ik drop in
+#unchanged (goal_state has the same shape as Assignment 1), but avoid_obstacles
+#and navigation_state_machine need adapting to tracked_obstacles (a list of
+#ed5315.sensors.TrackedObstacle, not [x, y] pairs). See README.md's Submission section.
+from ed5315 import sim_interface, robot_params
 
 prev_heading_error = 0.0
 total_heading_error = 0.0
-previous_time = time.time()
+previous_time = None
 
-def at_goal(robot_state, goal_state):    
-    
-    #check if we have reached goal point
-    d = distance to goal point??
-    
-    if d <= robot_params.goal_threshold:
-        return True
-    else:
-        return False
+def at_goal(robot_state, goal_state):
+    #check if we have reached goal point based on robot_params.goal_threshold
+    #return True/False
+    raise NotImplementedError
 
-def gtg(robot_state, goal_state):  
+def gtg(robot_state, goal_state):
     #The Go to goal controller
-    
-    global prev_heading_error
-    global total_heading_error  
-    global previous_time
-    
-    #Controller parameters
-    Kp = 0.00656
-    Kd = 0.0001
-    K = 0.4
-    
-    #determine how far to rotate to face the goal point
-    e_new = error between desired and current orientation of robot (in degress) ??
-    
-    #Remember to restrict error to (-180 ,180)
-    
-    current_time = time.time()
-    dt = current_time-previous_time
-    previous_time = current_time
-    
-    #PD controller for angular velocity
-    e_dot = ??
-    W = ??
-    prev_heading_error = ??
+    #Create a PD controller for angular velocity
+    #Create a seperate P controller for linear velocity
+    #return [V, W]
+    raise NotImplementedError
 
-    #find distance to goal
-    d = distance to goal point??
-    
-    #P control for linear velocity
-    V = ??
-    
-    #request robot to execute velocity
-    return[V,W]
+def avoid_obstacles(robot_state, tracked_obstacles):
+    #Reactive obstacle avoidance controller.
+    #tracked_obstacles: the full list of ed5315.sensors.TrackedObstacle - may be
+    #empty, and it's not filtered to "currently visible" for you: every
+    #obstacle ever detected stays in it, each with .id, .world_x, .world_y,
+    #.velocity_x, .velocity_y, .detected_time. Decide yourself which ones are
+    #still relevant (e.g. by distance, or how recent .detected_time is) and
+    #whether to treat a moving obstacle (.velocity_x/.velocity_y) differently
+    #from a stationary one. Every obstacle has radius robot_params.obstacle_radius.
+    #Design your own strategy here - e.g. steer away from the nearest one.
+    #return [V, W]
+    raise NotImplementedError
+
+def navigation_state_machine(robot_state, goal_state, tracked_obstacles):
+    #Combine gtg() and avoid_obstacles() into a state machine that switches
+    #between goal-seeking and obstacle-avoidance behaviour, e.g. based on how
+    #close the nearest relevant obstacle in tracked_obstacles is.
+    #Design your own switching logic here.
+    #return [V, W]
+    raise NotImplementedError
+
+def differential_drive_ik(V, W):
+    #Ensure the given V and W fall within robot_params.pioneer_max_W, robot_params.pioneer_max_V
+    #Convert a desired linear velocity V [m/s] and angular velocity W [rad/s]
+    #into left/right wheel angular velocities [rad/s], using
+    #robot_params.wheel_radius and robot_params.track_width.
+    #return [Vl, Vr]
+    raise NotImplementedError

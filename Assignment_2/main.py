@@ -2,54 +2,15 @@
 
 """
 Mobile robot simulation setup
-@author: Bijo Sebastian 
+@author: Bijo Sebastian
 """
 
-#Import libraries
-import time
-import matplotlib.pyplot as mp
-
 #Import files
-import sim_interface
-import robot_model
-
-#Plotter setup  
-mp.close('all')
-fig = mp.figure() 
-mp.axis([0.0, 10, 0.0, 10])
-mp.ion()  
-mp.xlabel('X(m)')
-mp.ylabel('Y(m)') 
-
-def plot_state(prev_state, current_state, color, alp):
-
-    #Plot robot
-    mp.plot(current_state[0], current_state[1], color, ms = 10.0)
-    #plot trace
-    mp.plot([prev_state[0], current_state[0]], [prev_state[1], current_state[1]], '-'+color, alpha = alp)
-    return
-
-def plot_ground_truth():
-    
-    global prev_robot_state
-    
-    robot_state = sim_interface.localize_robot()
-    plot_state(robot_state, prev_robot_state, 'r', 0.5 )
-    prev_robot_state = robot_state
-    return
-
-def plot_odom(v, w):
-    
-    global prev_odom_state
-    
-    odom_state = robot_model.simulate(prev_odom_state, [v, w], sim_interface.sim_timer())
-    plot_state(odom_state, prev_odom_state, 'y', 0.5 )
-    prev_odom_state = odom_state
+from ed5315 import sim_interface, sensors, plotting, robot_params
+import perception
+import control
 
 def main():
-    global prev_robot_state
-    global prev_odom_state
-    
     if (sim_interface.sim_init()):
 
         #Obtain handles to sim elements
@@ -57,84 +18,68 @@ def main():
 
         #Start simulation
         if (sim_interface.start_simulation()):
-            
+
             #Stop robot
             sim_interface.setvel_pioneers(0.0, 0.0)
-            
-            #Obtain robots intial position and setup plots
-            prev_robot_state =  sim_interface.localize_robot()
-            prev_odom_state =  sim_interface.localize_robot()
-            state = sim_interface.localize_robot()
-            mp.plot([state[0], prev_odom_state[0]], [state[1], prev_odom_state[1]], '-y', alpha = 0.5, label='Odometry')
-            mp.plot([state[0], prev_robot_state[0]], [state[1], prev_robot_state[1]], '-r', alpha = 0.5, label='Ground truth')
-            mp.legend(loc="upper left")
-            
-            #Move robot straight
-            for i in range(10):
-                sim_interface.setvel_pioneers(0.2, 0.0)
-                plot_odom(0.2, 0.0)
-                plot_ground_truth()
-                time.sleep(0.1)
-                
-            #Turn robot 
-            for i in range(15):
-                sim_interface.setvel_pioneers(0.0, 0.1)
-                plot_odom(0.0, 0.1)
-                plot_ground_truth()
-                time.sleep(0.1)
-                
-            #Move robot straight
-            for i in range(10):                
-                sim_interface.setvel_pioneers(0.2, 0.0)
-                plot_odom(0.2, 0.0)
-                plot_ground_truth()
-                time.sleep(0.1)
-            
-            #Turn robot 
-            for i in range(15):
-                sim_interface.setvel_pioneers(0.0, -0.1)
-                plot_odom(0.0, -0.1)
-                plot_ground_truth()
-                time.sleep(0.1)
-            
-            #Move robot straight
-            for i in range(10):                
-                sim_interface.setvel_pioneers(0.2, 0.0)
-                plot_odom(0.2, 0.0)
-                plot_ground_truth()
-                time.sleep(0.1)
-            
-            #Turn robot 
-            for i in range(15):
-                sim_interface.setvel_pioneers(0.0, -0.1)
-                plot_odom(0.0, -0.1)
-                plot_ground_truth()
-                time.sleep(0.1)
-            
-            #Move robot straight
-            for i in range(10):                
-                sim_interface.setvel_pioneers(0.2, 0.0)
-                plot_odom(0.2, 0.0)
-                plot_ground_truth()
-                time.sleep(0.1)
-                
+
+            #Obtain goal position (ground truth - same as Assignment 1)
+            goal_state = sim_interface.get_goal_pose()
+
+            #Obtain robots position (ground truth - still given this assignment)
+            robot_state = sim_interface.localize_robot()
+
+            #Your own obstacle-tracking state - starts empty, a list of
+            #ed5315.sensors.TrackedObstacle
+            tracked_obstacles = []
+
+            #Record the path followed, for the result plot at the end
+            path = [robot_state[:2]]
+
+            while not control.at_goal(robot_state, goal_state):
+
+                #Raw sensor reads - no obstacle ground truth this assignment
+                image, _ = sensors.read_camera_image(sim_interface)
+                lidar_scan = sensors.read_lidar(sim_interface)
+
+                #Detect obstacles from the raw sensor data
+                tracked_obstacles = perception.detect_obstacles(image, lidar_scan, robot_state, tracked_obstacles)
+
+                [V, W] = control.navigation_state_machine(robot_state, goal_state, tracked_obstacles)
+                [Vl, Vr] = control.differential_drive_ik(V, W)
+                sim_interface.setvel_pioneers(Vl, Vr)
+
+                #step the simulation forward one timestep
+                sim_interface.step()
+                robot_state = sim_interface.localize_robot()
+                path.append(robot_state[:2])
+
             #Stop robot
             sim_interface.setvel_pioneers(0.0, 0.0)
-            
+
+            #Plot the map (boundary, ground-truth obstacles, detected
+            #obstacles, goal) and the path followed
+            fig, ax = plotting.new_plot()
+            plotting.draw_boundary(ax)
+            plotting.draw_obstacles(ax, sim_interface.get_obstacle_positions(), radius=robot_params.obstacle_radius,
+                                     color='red', label='Obstacles (ground truth)')
+            detected_positions = [[o.world_x, o.world_y] for o in tracked_obstacles]
+            plotting.draw_obstacles(ax, detected_positions, color='orange', marker='x',
+                                     label='Obstacles (detected)')
+            plotting.draw_goal(ax, goal_state)
+            plotting.draw_path(ax, path, label='Robot path')
+            plotting.finish_plot(ax, 'Assignment 2: sense obstacles via camera + lidar', 'Assignment_2/result.png')
+
         else:
-            print ('Failed to start simulation')
+            print('Failed to start simulation')
     else:
-        print ('Failed connecting to remote API server')
-    
+        print('Failed connecting to remote API server')
+
+    sim_interface.setvel_pioneers(0.0, 0.0)
     sim_interface.sim_shutdown()
-    time.sleep(2.0)
     return
 
 #run
 if __name__ == '__main__':
 
-    main()                    
-    print ('Program ended')
-            
-
- 
+    main()
+    print('Program ended')

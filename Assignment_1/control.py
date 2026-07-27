@@ -1,52 +1,40 @@
-import robot_params
-import numpy as np 
-import time
+from ed5315 import sim_interface, robot_params
 
 prev_heading_error = 0.0
 total_heading_error = 0.0
-previous_time = time.time()
+previous_time = None
 
-def at_goal(robot_state, goal_state):    
-    
-    #check if we have reached goal point
-    d = distance to goal point??
-    
-    if d <= robot_params.goal_threshold:
-        return True
-    else:
-        return False
+def at_goal(robot_state, goal_state):
+    #check if we have reached goal point based on robot_params.goal_threshold
+    #return True/False
+    raise NotImplementedError
 
-def gtg(robot_state, goal_state):  
+def gtg(robot_state, goal_state):
     #The Go to goal controller
-    
-    global prev_heading_error
-    global total_heading_error  
-    global previous_time
-    
-    #Controller parameters
-    Kp = 0.00656
-    Kd = 0.0001
-    K = 0.4
-    
-    #determine how far to rotate to face the goal point
-    e_new = error between desired and current orientation of robot (in degress) ??
-    
-    #Remember to restrict error to (-180 ,180)
-    
-    current_time = time.time()
-    dt = current_time-previous_time
-    previous_time = current_time
-    
-    #PD controller for angular velocity
-    e_dot = ??
-    W = ??
-    prev_heading_error = ??
+    #Create a PD controller for angular velocity
+    #Create a seperate P controller for linear velocity
+    #return [V, W]
+    raise NotImplementedError
 
-    #find distance to goal
-    d = distance to goal point??
-    
-    #P control for linear velocity
-    V = ??
-    
-    #request robot to execute velocity
-    return[V,W]
+def avoid_obstacles(robot_state, nearby_obstacles):
+    #Reactive obstacle avoidance controller.
+    #nearby_obstacles: list of [x, y] world positions of obstacles currently
+    #within robot_params.obstacle_sense_radius of the robot (see main.py). Every obstacle has radius robot_params.obstacle_radius.
+    #Design your own strategy here.
+    #return [V, W]
+    raise NotImplementedError
+
+def navigation_state_machine(robot_state, goal_state, nearby_obstacles):
+    #Combine gtg() and avoid_obstacles() into a state machine that switches
+    #between goal-seeking and obstacle-avoidance behaviour.
+    #Design your own switching logic here.
+    #return [V, W]
+    raise NotImplementedError
+
+def differential_drive_ik(V, W):
+    #Ensure the given V and W fall within robot_params.pioneer_max_W, robot_params.pioneer_max_V
+    #Convert a desired linear velocity V [m/s] and angular velocity W [rad/s]
+    #into left/right wheel angular velocities [rad/s], using
+    #robot_params.wheel_radius and robot_params.track_width.
+    #return [Vl, Vr]
+    raise NotImplementedError

@@ -1,0 +1,19 @@
+[project]
+name = "ed5315"
+version = "0.1.0"
+description = "ED5315 shared CoppeliaSim interface package"
+requires-python = ">=3.10"
+dependencies = [
+    "coppeliasim-zmqremoteapi-client",
+    "numpy",
+    "matplotlib",
+    "pytest",
+    "opencv-python",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["ed5315*"]
