@@ -1,3 +1,5 @@
+import math
+
 from ed5315 import sim_interface, robot_params
 
 prev_heading_error = 0.0
@@ -7,7 +9,10 @@ previous_time = None
 def at_goal(robot_state, goal_state):
     #check if we have reached goal point based on robot_params.goal_threshold
     #return True/False
-    raise NotImplementedError
+    d = math.hypot(goal_state[0] - robot_state[0], goal_state[1] - robot_state[1])
+    if d <= robot_params.goal_threshold:
+        return True
+    return False
 
 def gtg(robot_state, goal_state):
     #The Go to goal controller
