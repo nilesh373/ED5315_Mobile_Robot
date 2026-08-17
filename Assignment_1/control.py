@@ -38,9 +38,7 @@ def gtg(robot_state, goal_state):
 
     desired_heading = math.atan2(dy, dx)
 
-    heading_error = wrap_to_pi(
-        desired_heading - theta
-    )
+    heading_error = wrap_to_pi(desired_heading - theta)
 
     current_time = sim_interface.sim_time()
 
@@ -50,9 +48,7 @@ def gtg(robot_state, goal_state):
         dt = current_time - previous_time
 
     if dt > 1e-6:
-        heading_error_dot = (
-            heading_error - prev_heading_error
-        ) / dt
+        heading_error_dot = (heading_error - prev_heading_error) / dt
     else:
         heading_error_dot = 0.0
 
@@ -65,20 +61,11 @@ def gtg(robot_state, goal_state):
 
     V = Kp_V * distance
 
-    W = (
-        Kp_W * heading_error
-        + Kd_W * heading_error_dot
-    )
+    W = (Kp_W * heading_error + Kd_W * heading_error_dot)
 
-    V = max(
-        min(V, robot_params.pioneer_max_V),
-        -robot_params.pioneer_max_V
-    )
+    V = max(min(V, robot_params.pioneer_max_V), -robot_params.pioneer_max_V)
 
-    W = max(
-        min(W, robot_params.pioneer_max_W),
-        -robot_params.pioneer_max_W
-    )
+    W = max(min(W, robot_params.pioneer_max_W), -robot_params.pioneer_max_W)
 
     return [V, W]
 
