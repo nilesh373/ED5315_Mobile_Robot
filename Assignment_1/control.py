@@ -88,7 +88,7 @@ def avoid_obstacles(robot_state, nearby_obstacles): #Needs robot_state and nearb
         dx = xr - obs[0] #Calculate the difference in x-coordinates between the robot and the obstacle
         dy = yr - obs[1] #Calculate the difference in y-coordinates between the robot and the obstacle
 
-        distance = math.hypot(dx, dy) #Calculate the Euclidean distance between the robot.
+        distance = math.hypot(dx, dy) #Calculate the Euclidean distance between the robot and the obstacle.
 
         if distance < 1e-6: #If the distance is very small (less than a threshold), skip this obstacle to avoid division by zero or numerical instability in the calculations.
             continue
