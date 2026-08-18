@@ -6,16 +6,16 @@ prev_heading_error = 0.0
 total_heading_error = 0.0
 previous_time = None
 
-def wrap_to_pi(angle):
+def wrap_to_pi(angle): #This function wraps an angle to the range [-pi, pi).
     return (angle + math.pi) % (2.0 * math.pi) - math.pi
 
-def at_goal(robot_state, goal_state):
-    d = math.hypot(goal_state[0] - robot_state[0], goal_state[1] - robot_state[1])
-    if d <= robot_params.goal_threshold:
+def at_goal(robot_state, goal_state): #This function checks if the robot is within a certain threshold distance of the goal state.
+    d = math.hypot(goal_state[0] - robot_state[0], goal_state[1] - robot_state[1]) # Calculate the Euclidean distance between the robot and the goal.
+    if d <= robot_params.goal_threshold: # If the distance is less than or equal to the goal threshold then successful.
         return True
     return False
 
-def gtg(robot_state, goal_state):
+def gtg(robot_state, goal_state): #Compute the control commands to drive the robot towards the goal state using a PD controller.
     global prev_heading_error, previous_time
 
     xr = robot_state[0]
@@ -25,17 +25,17 @@ def gtg(robot_state, goal_state):
     xg = goal_state[0]
     yg = goal_state[1]
 
-    dx = xg - xr
-    dy = yg - yr
+    dx = xg - xr # Calculate the difference in x-coordinates between the goal and the robot.
+    dy = yg - yr # Calculate the difference in y-coordinates between the goal and the robot.
 
-    distance = math.hypot(dx, dy)
-    desired_heading = math.atan2(dy, dx)
+    distance = math.hypot(dx, dy) # Calculate the Euclidean distance between the robot and the goal.
+    desired_heading = math.atan2(dy, dx) #Calculate the desired heading angle to reach the goal.
 
-    heading_error = wrap_to_pi(desired_heading - theta)
+    heading_error = wrap_to_pi(desired_heading - theta) #Difference between the desired heading and the current heading of the robot, wrapped to the range [-pi, pi).
 
-    current_time = sim_interface.sim_time()
+    current_time = sim_interface.sim_time() #Get the current simulation time.
 
-    if previous_time is None:
+    if previous_time is None: #If this is the first time step, set dt to 0.0 to avoid division by zero in the derivative calculation.
         dt = 0.0
     else:
         dt = current_time - previous_time
@@ -48,16 +48,18 @@ def gtg(robot_state, goal_state):
     prev_heading_error = heading_error
     previous_time = current_time
 
+    #PD controller gains
     Kp_V = 0.8
     Kp_W = 2.0
     Kd_W = 0.4
 
+    #Compute the linear and angular velocities based on the distance to the goal and the heading error.
     V = Kp_V * distance
 
     W = Kp_W * heading_error + Kd_W * heading_error_dot
 
-    V = max(min(V, robot_params.pioneer_max_V), -robot_params.pioneer_max_V)
-    W = max(min(W, robot_params.pioneer_max_W), -robot_params.pioneer_max_W)
+    V = max(min(V, robot_params.pioneer_max_V), -robot_params.pioneer_max_V) #Clamp the linear velocity to the maximum and minimum values defined in robot_params.
+    W = max(min(W, robot_params.pioneer_max_W), -robot_params.pioneer_max_W) #Clamp the angular velocity to the maximum and minimum values defined in robot_params.
 
     return [V, W]
 
@@ -69,8 +71,8 @@ def avoid_obstacles(robot_state, nearby_obstacles):
     yr = robot_state[1]
     theta = robot_state[2]
 
-    rep_x = 0.0
-    rep_y = 0.0
+    rep_x = 0.0 #Initialize the repulsive force in the x-direction to zero.
+    rep_y = 0.0 #Initialize the repulsive force in the y-direction to zero.
 
     for obs in nearby_obstacles:
         dx = xr - obs[0]
@@ -100,10 +102,7 @@ def avoid_obstacles(robot_state, nearby_obstacles):
 
     W = K_avoid_W * heading_error
 
-    min_distance = min(
-        math.hypot(obs[0] - xr, obs[1] - yr)
-        for obs in nearby_obstacles
-    )
+    min_distance = min(math.hypot(obs[0] - xr, obs[1] - yr) for obs in nearby_obstacles)
 
     safety_distance = robot_params.obstacle_radius + 0.5
 
@@ -129,10 +128,7 @@ def navigation_state_machine(robot_state, goal_state, nearby_obstacles):
     xr = robot_state[0]
     yr = robot_state[1]
 
-    min_distance = min(
-        math.hypot(obs[0] - xr, obs[1] - yr)
-        for obs in nearby_obstacles
-    )
+    min_distance = min(math.hypot(obs[0] - xr, obs[1] - yr) for obs in nearby_obstacles)
 
     avoidance_distance = 1.5
 
