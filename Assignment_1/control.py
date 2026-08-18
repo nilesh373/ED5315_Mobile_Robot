@@ -74,16 +74,17 @@ def avoid_obstacles(robot_state, nearby_obstacles):
     rep_x = 0.0 #Initialize the repulsive force in the x-direction to zero.
     rep_y = 0.0 #Initialize the repulsive force in the y-direction to zero.
 
+    #Compute the repulsive forces from nearby obstacles
     for obs in nearby_obstacles:
         dx = xr - obs[0]
         dy = yr - obs[1]
 
         distance = math.hypot(dx, dy)
 
-        if distance < 1e-6:
-            continue
+        if distance < 1e-6: #Simply skip this obstacle if the distance is too small to avoid division by zero.
+            continue 
 
-        influence = robot_params.obstacle_sense_radius
+        influence = robot_params.obstacle_sense_radius #Defined in robot_params.py, this is the distance within which obstacles influence the robot's motion.
 
         if distance < influence:
             weight = (influence - distance) / (distance * distance)
@@ -91,29 +92,29 @@ def avoid_obstacles(robot_state, nearby_obstacles):
             rep_x += weight * (dx / distance)
             rep_y += weight * (dy / distance)
 
-    if math.hypot(rep_x, rep_y) < 1e-6:
+    if math.hypot(rep_x, rep_y) < 1e-6: 
         return [0.0, 0.0]
 
     desired_heading = math.atan2(rep_y, rep_x)
 
     heading_error = wrap_to_pi(desired_heading - theta)
 
-    K_avoid_W = 2.5
+    K_avoid_W = 2.5 #Gain factor for the angular velocity when avoiding obstacles. This value determines how aggressively the robot will turn to avoid obstacles.
 
-    W = K_avoid_W * heading_error
+    W = K_avoid_W * heading_error #The angular velocity is proportional to the heading error, scaled by a gain factor.
 
     min_distance = min(math.hypot(obs[0] - xr, obs[1] - yr) for obs in nearby_obstacles)
 
     safety_distance = robot_params.obstacle_radius + 0.5
 
-    if min_distance <= safety_distance:
+    if min_distance <= safety_distance: #Simply set the linear velocity to a small value if the robot is too close to an obstacle.
         V = 0.05
     elif min_distance <= 1.2:
         V = 0.12
     else:
         V = 0.18
 
-    if abs(heading_error) > math.pi / 2:
+    if abs(heading_error) > math.pi / 2: #Simply set the linear velocity to a small value if the robot is turning away from the obstacles.
         V = 0.02
 
     W = max(min(W, robot_params.pioneer_max_W), -robot_params.pioneer_max_W)
@@ -128,10 +129,10 @@ def navigation_state_machine(robot_state, goal_state, nearby_obstacles):
     xr = robot_state[0]
     yr = robot_state[1]
 
-    min_distance = min(math.hypot(obs[0] - xr, obs[1] - yr) for obs in nearby_obstacles)
+    #Compute the minimum distance to any nearby obstacle
+    min_distance = min(math.hypot(obs[0] - xr, obs[1] - yr) for obs in nearby_obstacles) 
 
-    avoidance_distance = 1.5
-
+    avoidance_distance = 1.5 #Simply set the avoidance distance to a fixed value.
     if min_distance <= avoidance_distance:
         return avoid_obstacles(robot_state, nearby_obstacles)
 
@@ -145,6 +146,7 @@ def differential_drive_ik(V, W):
     r = robot_params.wheel_radius
     L = robot_params.track_width
 
+    #Compute the left and right wheel velocities based on the linear and angular velocities of the robot using the differential drive kinematics equations.
     Vl = (V - (L / 2.0) * W) / r
     Vr = (V + (L / 2.0) * W) / r
 
