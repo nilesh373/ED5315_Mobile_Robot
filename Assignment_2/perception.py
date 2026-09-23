@@ -33,7 +33,7 @@ def detect_obstacles(image, lidar_scan, robot_state, tracked_obstacles):
 
         points = marker_corners.reshape(4, 2)
         pixel_x = float(np.mean(points[:, 0]))
-        bearing = math.atan2(pixel_x - image_center, focal_length)
+        bearing = -math.atan2(pixel_x - image_center, focal_length)
 
         lidar_distance = None
         lidar_angle = None
@@ -55,9 +55,7 @@ def detect_obstacles(image, lidar_scan, robot_state, tracked_obstacles):
 
         if smallest_angle_error > math.radians(5.0):
             continue
-
-        print("ID:", marker_id, "bearing:", bearing, "lidar_angle:", lidar_angle, "distance:", lidar_distance)
-
+        
         local_x = lidar_distance * math.cos(lidar_angle)
         local_y = lidar_distance * math.sin(lidar_angle)
 
