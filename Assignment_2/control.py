@@ -12,7 +12,7 @@ total_heading_error = 0.0
 previous_time = None
 
 def wrap_to_pi(angle): #This function wraps an angle to the range [-pi, pi).
-    return (angle + math.pi) % (2.0 * math.pi) - math.
+    return (angle + math.pi) % (2.0 * math.pi) - math.pi
 
 def at_goal(robot_state, goal_state): #This function checks if the robot is within a certain threshold distance of the goal state.
     d = math.hypot(goal_state[0] - robot_state[0], goal_state[1] - robot_state[1]) # Calculate the Euclidean distance between the robot and the goal.
