@@ -1,31 +1,36 @@
-#This file is NOT what you submit for Assignment 4 - only localization.py is graded.
-#Paste your own working odometry.py solution from Assignment 3 in here -
-#localization.py's EKF calls estimate_pose() below directly as its own
-#prediction step, so a working odometry.py is required for localization.py to
-#run at all, not just for local testing. See README.md's Submission section.
+import math
 from ed5315 import sim_interface, robot_params
 
 previous_time = None
 
-def estimate_pose(robot_state, Vl, Vr):
-    #Dead-reckoning: integrate the two wheels' angular velocities into an
-    #updated pose estimate.
-    #
-    #robot_state: [x, y, theta] - the previous pose ESTIMATE this call starts
-    #    from - localization.py passes in its own EKF mean here each call, not
-    #    ground truth.
-    #Vl, Vr: left/right wheel angular velocities [rad/s], from
-    #    ed5315.sensors.read_wheel_velocities() - these carry simulated
-    #    encoder noise (not the commanded velocity), so your estimate will
-    #    drift from ground truth over time. That drift is expected - it's
-    #    what localization.py's EKF correction step is for.
-    #
-    #Use ed5315.sim_interface.sim_time() (and a module-level variable, e.g.
-    #previous_time above) to get the elapsed time dt since your last call,
-    #the same way Assignment 1/2/3's gtg/estimate_pose source their own dt.
-    #Convert Vl/Vr to linear wheel speeds via robot_params.wheel_radius, then
-    #to robot linear/angular velocity via robot_params.track_width, then
-    #integrate x/y/theta forward by dt.
-    #
-    #return the updated [x, y, theta] estimate
-    raise NotImplementedError
+def estimate_pose(robot_state, Vl, Vr): #Function to estimate the robot's pose based on wheel velocities and previous state
+    global previous_time #GLobal variable to keep track of the previous time step for integration
+
+    current_time = sim_interface.sim_time() #Get the current simulation time
+
+    # Calculate the time difference (dt) between the current and previous time steps for integration
+    if previous_time is None: 
+        dt = 0.0
+    else:
+        dt = current_time - previous_time
+
+    previous_time = current_time #Equate the previous time to the current time for the next iteration
+
+    # Convert wheel velocities from rad/s to m/s using the wheel radius
+    v_left = Vl * robot_params.wheel_radius # Left wheel linear velocity
+    v_right = Vr * robot_params.wheel_radius # Right wheel linear velocity
+
+    # Differential-drive kinematics
+    V = (v_left + v_right) / 2.0 # Average linear velocity of the robot
+    W = (v_right - v_left) / robot_params.track_width # Angular velocity of the robot based on the difference in wheel velocities and the track width
+
+    x, y, theta = robot_state # Unpack the current robot state into x, y coordinates and heading angle theta
+
+    # Dead-reckoning integration
+    x += V * math.cos(theta) * dt #Update the x-coordinate based on the linear velocity, heading angle, and time step
+    y += V * math.sin(theta) * dt #Update the y-coordinate based on the linear velocity, heading angle, and time step
+    theta += W * dt
+
+    theta = (theta + math.pi) % (2.0 * math.pi) - math.pi #Wrap angle between -pi and pi 
+
+    return [x, y, theta]
